@@ -346,6 +346,7 @@ int main()
     //   // cout << "asdfgdjiaonrfokwepjnbgerfewokprnjberfewkornjbemr,rlokrfewl,rborkf,reopbkpkgebksomkl" << endl;
     //   othermain(1000001, 2000001);
     // }
+    cout << "started" << endl;
     for (int i = 0; i < omp_get_max_threads(); i++)
     {
       if (omp_get_thread_num() == i)
