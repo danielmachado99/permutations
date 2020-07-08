@@ -4,7 +4,36 @@
 #include <algorithm>
 #include <bits/stdc++.h>
 #include <omp.h>
+#include <unistd.h>
+#include <fstream>
 using namespace std;
+
+void reverseStr(string &str)
+{
+  int n = str.length();
+
+  // Swap character starting from two
+  // corners
+  for (int i = 0; i < n / 2; i++)
+    swap(str[i], str[n - i - 1]);
+}
+
+int writeFile(int thread, string toappend)
+{
+  ofstream outfile;
+  string temp = to_string(thread) + ".txt";
+  outfile.open(temp, ios_base::app); // append instead of overwrite
+  outfile << (toappend);
+  return 0;
+}
+int clearFile(int thread)
+{
+  ofstream outfile;
+  string temp = to_string(thread) + ".txt";
+  outfile.open(temp); // append instead of overwrite
+  outfile << ("");
+  return 0;
+}
 
 int val(char c)
 
@@ -130,6 +159,7 @@ int addpointshome(int status)
   {
     return (3);
   }
+  return (-1);
 }
 int addpointsaway(int status)
 {
@@ -145,18 +175,16 @@ int addpointsaway(int status)
   {
     return (0);
   }
+  return (-1);
 }
 
-int main()
+void othermain(long long start, long long end, int maxthreads, int thread)
 {
-
+  clearFile(thread);
   string teams[] = {"Liverpool", "Man City", "Leicester", "Chelsea", "Man Utd", "Wolves", "Sheffield Utd", "Arsenal", "Spurs", "Burnley", "Everton", "Crystal Palace", "Newcastle", "Southampton", "Brighton", "West Ham", "Watford", "Aston Villa", "Bournemouth", "Norwich"};
-
   string homegame[] = {"Crystal Palace", "Arsenal", "Sheffield Utd", "Bournemouth", "Aston Villa", "Sheffield Utd", "Wolves", "Spurs", "Bournemouth", "Man Utd", "Arsenal", "Burnley", "Chelsea", "Crystal Palace", "Leicester", "Newcastle", "Aston Villa", "Liverpool", "Man Utd", "Sheffield Utd", "Spurs", "Wolves", "Arsenal", "Chelsea", "Crystal Palace", "Leicester", "Southampton"};
-
   string awaygame[] = {"Chelsea", "Leicester", "Wolves", "Spurs", "Man Utd", "Chelsea", "Everton", "Arsenal", "Leicester", "Southampton", "Liverpool", "Wolves", "Norwich", "Man Utd", "Sheffield Utd", "Spurs", "Arsenal", "Chelsea", "West Ham", "Everton", "Leicester", "Crystal Palace", "Watford", "Wolves", "Spurs", "Man Utd", "Sheffield Utd"};
   int status[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
   int points[] = {86, 66, 55, 54, 52, 52, 47, 46, 45, 45, 44, 42, 42, 40, 33, 30, 28, 27, 27, 21};
 
   map<string, int> teamspoints;
@@ -165,154 +193,172 @@ int main()
   {
     teamspoints[teams[i]] = points[i];
   }
-  int counter = 0;
+  long long counter = start + thread;
   map<string, map<int, int>> teamendpositions;
   bool exit = false;
-  auto start = chrono::steady_clock::now();
-  long long inputNum = pow(3, (sizeof(homegame) / sizeof(homegame[0]))) - 1;
-  int base = 3;
   char res[100];
-  printf("Equivalent of %lld in base %d is "
-         " %s\n",
-         inputNum, base, fromDeci(res, base, inputNum));
 
-  string stringtemp = fromDeci(res, 3, 10);
+  //long long begin = 0;
+  // long long end = pow(3, (sizeof(homegame) / sizeof(homegame[0]))) - 1;
+
+  string stringtemp = fromDeci(res, 3, counter); //fromDeci(res, 3, 0);
+  reverse(stringtemp.begin(), stringtemp.end());
   int lengthstring = (sizeof(homegame) / sizeof(homegame[0])) - stringtemp.length();
-  cout << endl;
-  cout << stringtemp << endl;
   for (int i = 0; i < lengthstring; i++)
   {
     stringtemp = stringtemp + "0";
-    cout << stringtemp << endl;
   }
-  cout << sizeof(homegame) / sizeof(homegame[0]) << endl;
-  system("pause");
-  long long counter1 = 0;
-  long long counter2 = 0;
-  long long counter3 = 0;
-  long long counter4 = 0;
-  long long counter5 = 0;
-  long long counter6 = 0;
-  long long counter7 = 0;
-  long long counter8 = 0;
-  omp_set_dynamic(0); // Explicitly disable dynamic teams
-  omp_set_num_threads(2);
+  for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
+  {
+    status[i] = stringtemp[i] - 48;
+    cout << status[i] << " ";
+  }
+  cout << endl;
+  //system("pause");
+  //cout << "NUMBER OF GAMES = " << sizeof(homegame) / sizeof(homegame[0]) << endl;
+  cout << counter << "           " << start << endl;
+  while (exit == false && counter < end)
+  {
+    int statuscounter = 0;                                           //used to check if the status arrray is full of 2s.
+    for (int i = 0; i < sizeof(homegame) / sizeof(homegame[0]); i++) //add points to teams for the current permutation
+    {
+      if (status[i] == 2)
+      {
+        statuscounter = statuscounter + 1;
+      }
+      teamspoints[homegame[i]] = teamspoints[homegame[i]] + addpointshome(status[i]);
+      teamspoints[awaygame[i]] = teamspoints[awaygame[i]] + addpointsaway(status[i]);
+    }
+
+    if (statuscounter == sizeof(homegame) / sizeof(homegame[0])) //exit while loop since permutations have been completed
+    {
+      exit = true;
+    }
+
+    //following code to sort teampoints to sort teams position.
+    map<string, int> M;
+    // Given Map
+    M = teamspoints;
+    std::vector<std::string> data;
+    // Function Call
+    data = sort(M);
+    for (int i = data.size() - 1; i >= 0; i--)
+    {
+      //teamsendpositions {team:{1:500, 2:400}}, used to count the number of times a team has finished in a position
+      teamendpositions[data[i]][20 - i] = teamendpositions[data[i]][20 - i] + 1;
+    }
+
+    if (counter % 100000 == 0) //to print the frequency of positions every 100,000 permutations
+    {
+      clearFile(thread);
+      for (int i = 0; i < 20; i++)
+      {
+        // cout << teams[i];
+        writeFile(thread, teams[i]);
+        for (int x = 1; x < 21; x++)
+        {
+
+          writeFile(thread, " " + to_string(x) + ":" + to_string(teamendpositions[teams[i]][x]));
+          // cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
+        }
+        writeFile(thread, "\n");
+        //cout << endl;
+      }
+    }
+
+    //following is to iterate to the next permutation
+
+    // if (status[0] == 2)
+    // {
+    //   for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
+    //   {
+    //     if (status[i] < 2)
+    //     {
+    //       status[i] = status[i] + 1;
+    //       break;
+    //     }
+    //     else
+    //     {
+    //       status[i] = 0;
+    //     }
+    //   }
+    // }
+    // else
+    // {
+    //   status[0] = status[0] + 1;
+    // }
+
+    string stringtemp = fromDeci(res, 3, counter); //fromDeci(res, 3, 0);
+    reverse(stringtemp.begin(), stringtemp.end());
+    int lengthstring = (sizeof(homegame) / sizeof(homegame[0])) - stringtemp.length();
+    for (int i = 0; i < lengthstring; i++)
+    {
+      stringtemp = stringtemp + "0";
+    }
+    for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
+    {
+      status[i] = stringtemp[i] - 48;
+      //cout << status[i] << " ";
+    }
+    //cout << "                                     " << thread << endl;
+    // system("pause");
+
+    //following is for setting the points of each team to their starting points , for the next permutation
+    for (int i = 0; i < sizeof(teams) / sizeof(teams[0]); i++)
+    {
+      teamspoints[teams[i]] = points[i];
+      ;
+    }
+
+    counter = counter + maxthreads;
+  }
+  cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
+  clearFile(thread);
+  for (int i = 0; i < 20; i++)
+  {
+    // cout << teams[i];
+    writeFile(thread, teams[i]);
+    for (int x = 1; x < 21; x++)
+    {
+
+      writeFile(thread, " " + to_string(x) + ":" + to_string(teamendpositions[teams[i]][x]));
+      // cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
+    }
+    //writeFile(thread, "          counter  " + to_string(counter) + "      thread " + to_string(thread) + "\n");
+    writeFile(thread, "\n");
+
+    //cout << endl;
+  }
+}
+
+int main()
+{
 #pragma omp parallel
   {
-
-    while (exit == false)
+    // if (omp_get_thread_num() == 0)
+    // {
+    //   //cout << "asdfgdjiaonrfokwepjnbgerfewokprnjberfewkornjbemr,rlokrfewl,rborkf,reopbkpkgebksomkl" << endl;
+    //   othermain(0, 1000000);
+    // }
+    // if (omp_get_thread_num() == 1)
+    // {
+    //   sleep(2);
+    //   // cout << "asdfgdjiaonrfokwepjnbgerfewokprnjberfewkornjbemr,rlokrfewl,rborkf,reopbkpkgebksomkl" << endl;
+    //   othermain(1000001, 2000001);
+    // }
+    for (int i = 0; i < omp_get_max_threads(); i++)
     {
-      int statuscounter = 0;                                           //used to check if the status arrray is full of 2s.
-      for (int i = 0; i < sizeof(homegame) / sizeof(homegame[0]); i++) //add points to teams for the current permutation
+      if (omp_get_thread_num() == i)
       {
-        if (status[i] == 2)
-        {
-          statuscounter = statuscounter + 1;
-        }
-        teamspoints[homegame[i]] = teamspoints[homegame[i]] + addpointshome(status[i]);
-        teamspoints[awaygame[i]] = teamspoints[awaygame[i]] + addpointsaway(status[i]);
+        sleep(2);
+        cout << omp_get_thread_num() << endl;
+        //cout << omp_get_max_threads() << endl;
+        //othermain(omp_get_thread_num() * 10000000, 10000000 / (omp_get_max_threads()- omp_get_thread_num() ), omp_get_thread_num());
+        othermain(0, 1000001, omp_get_max_threads(), omp_get_thread_num());
       }
-
-      if (statuscounter == sizeof(homegame) / sizeof(homegame[0])) //exit while loop since permutations have been completed
-      {
-        exit = true;
-      }
-
-      //following code to sort teampoints to sort teams position.
-      map<string, int> M;
-      // Given Map
-      M = teamspoints;
-      std::vector<std::string> data;
-      // Function Call
-      data = sort(M);
-      for (int i = data.size() - 1; i >= 0; i--)
-      {
-        //teamsendpositions {team:{1:500, 2:400}}, used to count the number of times a team has finished in a position
-        teamendpositions[data[i]][20 - i] = teamendpositions[data[i]][20 - i] + 1;
-      }
-
-      if (100000 % 100000 == 0) //to print the frequency of positions every 100,000 permutations
-      {
-        auto end = chrono::steady_clock::now();
-
-        cout << "Elapsed time in seconds : "
-             << chrono::duration_cast<chrono::seconds>(end - start).count()
-             << " sec";
-
-        for (int i = 0; i < 20; i++)
-        {
-          cout << teams[i];
-          for (int x = 1; x < 21; x++)
-          {
-            cout << " " << teamendpositions[teams[i]][x] << " ";
-          }
-          cout << endl;
-        }
-        printf("from thread = %d\n", omp_get_thread_num());
-        auto start = chrono::steady_clock::now();
-      }
-
-      //following is to iterate to the next permutation
-      if (omp_get_thread_num() == 0)
-      {
-        string stringtemp = fromDeci(res, 3, counter1);
-        int lengthstring = (sizeof(homegame) / sizeof(homegame[0])) - stringtemp.length();
-        for (int i = 0; i < lengthstring; i++)
-        {
-          stringtemp = stringtemp + "0";
-        }
-
-        for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
-        {
-          status[i] = stringtemp[i];
-        }
-        counter1 = counter1 + 2;
-      }
-      else if (omp_get_thread_num() == 1)
-      {
-        string stringtemp = fromDeci(res, 3, counter2);
-        int lengthstring = (sizeof(homegame) / sizeof(homegame[0])) - stringtemp.length();
-        for (int i = 0; i < lengthstring; i++)
-        {
-          stringtemp = stringtemp + "0";
-        }
-
-        for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
-        {
-          status[i] = stringtemp[i];
-        }
-        counter2 = counter2 + 2;
-      }
-
-      // if (status[0] == 2)
-      // {
-      //   for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
-      //   {
-      //     if (status[i] < 2)
-      //     {
-      //       status[i] = status[i] + 1;
-      //       break;
-      //     }
-      //     else
-      //     {
-      //       status[i] = 0;
-      //     }
-      //   }
-      // }
-      // else
-      // {
-      //   status[0] = status[0] + 1;
-      // }
-
-      //following is for setting the points of each team to their starting points , for the next permutation
-      for (int i = 0; i < sizeof(teams) / sizeof(teams[0]); i++)
-      {
-        teamspoints[teams[i]] = points[i];
-        ;
-      }
-
-      counter = counter + 1;
-      system("pause");
     }
+
+    //cout << omp_get_max_threads() << endl;
+    //othermain(omp_get_thread_num() * 10000000, 10000000 / (omp_get_max_threads()- omp_get_thread_num() ), omp_get_thread_num());
   }
 }
