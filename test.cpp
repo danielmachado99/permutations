@@ -6,6 +6,7 @@
 #include <omp.h>
 #include <unistd.h>
 #include <fstream>
+#include <stdio.h>
 using namespace std;
 
 void reverseStr(string &str)
@@ -180,19 +181,25 @@ int addpointsaway(int status)
 
 void othermain(long long start, long long end, int maxthreads, int thread)
 {
+  cout << thread << endl;
   clearFile(thread);
-  string teams[] = {"Liverpool", "Man City", "Leicester", "Chelsea", "Man Utd", "Wolves", "Sheffield Utd", "Arsenal", "Spurs", "Burnley", "Everton", "Crystal Palace", "Newcastle", "Southampton", "Brighton", "West Ham", "Watford", "Aston Villa", "Bournemouth", "Norwich"};
-  string homegame[] = {"Crystal Palace", "Arsenal", "Sheffield Utd", "Bournemouth", "Aston Villa", "Sheffield Utd", "Wolves", "Spurs", "Bournemouth", "Man Utd", "Arsenal", "Burnley", "Chelsea", "Crystal Palace", "Leicester", "Newcastle", "Aston Villa", "Liverpool", "Man Utd", "Sheffield Utd", "Spurs", "Wolves", "Arsenal", "Chelsea", "Crystal Palace", "Leicester", "Southampton"};
-  string awaygame[] = {"Chelsea", "Leicester", "Wolves", "Spurs", "Man Utd", "Chelsea", "Everton", "Arsenal", "Leicester", "Southampton", "Liverpool", "Wolves", "Norwich", "Man Utd", "Sheffield Utd", "Spurs", "Arsenal", "Chelsea", "West Ham", "Everton", "Leicester", "Crystal Palace", "Watford", "Wolves", "Spurs", "Man Utd", "Sheffield Utd"};
-  int status[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  int points[] = {86, 66, 55, 54, 52, 52, 47, 46, 45, 45, 44, 42, 42, 40, 33, 30, 28, 27, 27, 21};
-
+  //string teams[] = {"Liverpool", "Man City", "Chelsea", "Leicester", "Man Utd", "Wolves", "Sheffield Utd", "Spurs", "Arsenal", "Burnley", "Everton", "Southampton", "Newcastle", "Crystal Palace", "Brighton", "West Ham", "Watford", "Bournemouth", "Aston Villa", "Norwich"};
+  // string homegame[] = {"Chelsea", "Burnley", "Man City", "Newcastle", "Arsenal", "Everton", "Leicester", "Crystal Palace", "Southampton", "West Ham", "Norwich", "Bournemouth", "Spurs", "Brighton", "Sheffield Utd", "Wolves", "Watford", "Aston Villa", "Man Utd", "Liverpool", "Arsenal", "Burnley", "Chelsea", "Crystal Palace", "Everton", "Leicester", "Man City", "Newcastle", "Southampton", "West Ham"};
+  //string awaygame[] = {"Norwich", "Wolves", "Bournemouth", "Spurs", "Liverpool", "Aston Villa", "Sheffield Utd", "Man Utd", "Brighton", "Watford", "Burnley", "Southampton", "Leicester", "Newcastle", "Everton", "Crystal Palace", "Man City", "Arsenal", "West Ham", "Chelsea", "Watford", "Brighton", "Wolves", "Spurs", "Bournemouth", "Man Utd", "Norwich", "Liverpool", "Sheffield Utd", "Aston Villa"};
+  string teams[7] = {"Chelsea", "Leicester", "Man Utd", "Wolves", "Sheffield Utd", "Spurs", "Arsenal"};
+  string homegame[] = {"Burnley", "Newcastle", "Arsenal", "Leicester", "Crystal Palace", "Spurs", "Sheffield Utd", "Wolves", "Aston Villa", "Man Utd", "Liverpool", "Arsenal", "Chelsea", "Crystal Palace", "Leicester", "Southampton"};
+  string awaygame[] = {"Wolves", "Spurs", "Liverpool", "Sheffield Utd", "Man Utd", "Leicester", "Everton", "Crystal Palace", "Arsenal", "West Ham", "Chelsea", "Watford", "Wolves", "Spurs", "Man Utd", "Sheffield Utd"};
+  int status[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  //int points[] = {93, 72, 60, 59, 59, 55, 54, 52, 50, 50, 45, 45, 43, 42, 36, 34, 34, 31, 30, 21};
+  int points[] = {63, 59, 59, 55, 54, 52, 50};
   map<string, int> teamspoints;
 
   for (int i = 0; i < sizeof(teams) / sizeof(teams[0]); i++) //initialise starting points for each team
   {
     teamspoints[teams[i]] = points[i];
+    // cout << teamspoints[teams[i]] << endl;
   }
+
   long long counter = start + thread;
   map<string, map<int, int>> teamendpositions;
   bool exit = false;
@@ -211,12 +218,12 @@ void othermain(long long start, long long end, int maxthreads, int thread)
   for (int i = 0; i < sizeof(status) / sizeof(status[0]); i++)
   {
     status[i] = stringtemp[i] - 48;
-    cout << status[i] << " ";
+    // cout << status[i] << " ";
   }
-  cout << endl;
+  //cout << endl;
   //system("pause");
   //cout << "NUMBER OF GAMES = " << sizeof(homegame) / sizeof(homegame[0]) << endl;
-  cout << counter << "           " << start << endl;
+  // cout << counter << "           " << start << endl;
   while (exit == false && counter < end)
   {
     int statuscounter = 0;                                           //used to check if the status arrray is full of 2s.
@@ -226,8 +233,26 @@ void othermain(long long start, long long end, int maxthreads, int thread)
       {
         statuscounter = statuscounter + 1;
       }
-      teamspoints[homegame[i]] = teamspoints[homegame[i]] + addpointshome(status[i]);
-      teamspoints[awaygame[i]] = teamspoints[awaygame[i]] + addpointsaway(status[i]);
+      if (std::find(std::begin(teams), std::end(teams), homegame[i]) != std::end(teams))
+      {
+        // cout << homegame[i] << teamspoints[homegame[i]] << endl;
+        teamspoints[homegame[i]] = teamspoints[homegame[i]] + addpointshome(status[i]);
+      }
+      else
+      {
+        // cout << "not in teams " << homegame[i] << endl;
+        ;
+      }
+      if (std::find(std::begin(teams), std::end(teams), awaygame[i]) != std::end(teams))
+      {
+        teamspoints[awaygame[i]] = teamspoints[awaygame[i]] + addpointsaway(status[i]);
+        // cout << awaygame[i] << teamspoints[awaygame[i]] << endl;
+      }
+      else
+      {
+        //cout << "not in teams " << awaygame[i] << endl;
+        ;
+      }
     }
 
     if (statuscounter == sizeof(homegame) / sizeof(homegame[0])) //exit while loop since permutations have been completed
@@ -242,27 +267,32 @@ void othermain(long long start, long long end, int maxthreads, int thread)
     std::vector<std::string> data;
     // Function Call
     data = sort(M);
+    for (int i = 0; i < data.size(); i++)
+    {
+      //  cout << data[i] << endl;
+    }
     for (int i = data.size() - 1; i >= 0; i--)
     {
       //teamsendpositions {team:{1:500, 2:400}}, used to count the number of times a team has finished in a position
-      teamendpositions[data[i]][20 - i] = teamendpositions[data[i]][20 - i] + 1;
+      teamendpositions[data[i]][sizeof(teams) / sizeof(teams[0]) - i] = teamendpositions[data[i]][sizeof(teams) / sizeof(teams[0]) - i] + 1;
+      // cout << data[i] << " " << teamendpositions[data[i]][sizeof(teams) / sizeof(teams[0]) - i] << endl;
     }
 
     if (counter % 100000 == 0) //to print the frequency of positions every 100,000 permutations
     {
       clearFile(thread);
-      for (int i = 0; i < 20; i++)
+      for (int i = 0; i < sizeof(teams) / sizeof(teams[0]); i++)
       {
-        // cout << teams[i];
+        cout << teams[i];
         writeFile(thread, teams[i]);
-        for (int x = 1; x < 21; x++)
+        for (int x = 1; x < sizeof(teams) / sizeof(teams[0]) + 1; x++)
         {
 
           writeFile(thread, " " + to_string(x) + ":" + to_string(teamendpositions[teams[i]][x]));
-          // cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
+          cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
         }
         writeFile(thread, "\n");
-        //cout << endl;
+        cout << endl;
       }
     }
 
@@ -314,18 +344,18 @@ void othermain(long long start, long long end, int maxthreads, int thread)
   }
   cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
   clearFile(thread);
-  for (int i = 0; i < 20; i++)
+  for (int i = 0; i < sizeof(teams) / sizeof(teams[0]); i++)
   {
     // cout << teams[i];
-    writeFile(thread, teams[i]);
-    for (int x = 1; x < 21; x++)
+    writeFile(thread, "{\"" + teams[i] + "\"" + ":{");
+    for (int x = 1; x < sizeof(teams) / sizeof(teams[0]) + 1; x++)
     {
 
-      writeFile(thread, " " + to_string(x) + ":" + to_string(teamendpositions[teams[i]][x]));
-      // cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
+      writeFile(thread, "" + to_string(x) + ":" + to_string(teamendpositions[teams[i]][x]) + ",");
+      cout << " " << x << ":" << teamendpositions[teams[i]][x] << " ";
     }
     //writeFile(thread, "          counter  " + to_string(counter) + "      thread " + to_string(thread) + "\n");
-    writeFile(thread, "\n");
+    writeFile(thread, "}}\n");
 
     //cout << endl;
   }
@@ -333,33 +363,15 @@ void othermain(long long start, long long end, int maxthreads, int thread)
 
 int main()
 {
-#pragma omp parallel
-  {
-    // if (omp_get_thread_num() == 0)
-    // {
-    //   //cout << "asdfgdjiaonrfokwepjnbgerfewokprnjberfewkornjbemr,rlokrfewl,rborkf,reopbkpkgebksomkl" << endl;
-    //   othermain(0, 1000000);
-    // }
-    // if (omp_get_thread_num() == 1)
-    // {
-    //   sleep(2);
-    //   // cout << "asdfgdjiaonrfokwepjnbgerfewokprnjberfewkornjbemr,rlokrfewl,rborkf,reopbkpkgebksomkl" << endl;
-    //   othermain(1000001, 2000001);
-    // }
-    cout << "started" << endl;
-    for (int i = 0; i < omp_get_max_threads(); i++)
-    {
-      if (omp_get_thread_num() == i)
-      {
-        sleep(2);
-        cout << omp_get_thread_num() << endl;
-        //cout << omp_get_max_threads() << endl;
-        //othermain(omp_get_thread_num() * 10000000, 10000000 / (omp_get_max_threads()- omp_get_thread_num() ), omp_get_thread_num());
-        othermain(0, 1000001, omp_get_max_threads(), omp_get_thread_num());
-      }
-    }
 
-    //cout << omp_get_max_threads() << endl;
-    //othermain(omp_get_thread_num() * 10000000, 10000000 / (omp_get_max_threads()- omp_get_thread_num() ), omp_get_thread_num());
+  // cout << endl;
+  //othermain(0, 20, 8, 7);
+  omp_set_num_threads(8);
+#pragma omp parallel num_threads(8)
+  {
+    cout << "started" << omp_get_thread_num() << endl;
+
+    cout << omp_get_thread_num() << endl;
+    othermain(0, pow(3, 17), omp_get_max_threads(), omp_get_thread_num());
   }
 }
